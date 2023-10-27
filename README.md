@@ -43,5 +43,9 @@ Each candidate model represents a unique combination of variables, features (lin
 * Absence of concave curves.
 * Lowest AIC (delta AIC less than or equal to 2)
 
+<<<<<<< HEAD
 ### 6 - Fit and predict best models
 The final results were derived from 10 replicates of the best model, each using a subsample method with 70% of the records assigned as training and 30% as test.
+=======
+### 6 - Fit and predict best modelshe final results were derived from 10 replicates of the best model, each using a subsample method with 70% of the records assigned as training and 30% as test.
+>>>>>>> 3f57fb5e7597a73e86033b29d16ed76fc40d0107
