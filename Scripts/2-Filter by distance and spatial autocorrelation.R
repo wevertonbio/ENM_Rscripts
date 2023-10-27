@@ -63,7 +63,7 @@ clusterEvalQ(cl, {
 
 #Looping with pbapply
 moran_df <- pblapply(seq_along(spp), function(i) {
-  # tryCatch({ #Avoid errors
+  tryCatch({ #Avoid errors
   #Get species i
     sp <- spp[i]
     print(sp)
@@ -145,8 +145,8 @@ moran_df <- pblapply(seq_along(spp), function(i) {
     #Return final points
     return(final_points)
     
-    #  },
-    # error=function(e) NULL) #Avoid errors
+     },
+    error=function(e) NULL) #Avoid errors
 }, cl = cl)
 #stop cluster
 stopCluster(cl)
