@@ -10,6 +10,7 @@ library(pbapply)
 library(data.table)
 library(parallel)
 library(moranfast)
+library(spThin)
 
 
 #Import function to crop variable and do PCA from: https://github.com/wevertonbio/pre_kuenm2
@@ -32,8 +33,13 @@ df$ID <- row.names(df)
 #Import variables (only worldclim)
 var <- rast("Data_example/Current_Neotropic/Variables.tiff")
 var <- var[[grepl("Bio", names(var))]]
+#Remove Bio08, Bio09, Bio18 and Bio19
+var <- var[[!(names(var) %in% c("Bio09", "Bio09",
+                              "Bio18", "Bio19"))]]
 names(var)
 plot(var$Bio01)
+
+#Remove va
 
 #Wrap variables to run in parallel
 var_wrap <- wrap(var)
@@ -85,35 +91,29 @@ moran_df <- pblapply(seq_along(spp), function(i) {
     
     #Filter using distances
     filtered <- suppressMessages(lapply(d, function(x){
-      occfilt_geo(
-        data = occ,
-        x = "x",
-        y = "y",
-        env_layer = var_sp,
-        method = c("defined", d = x),
-        prj = crs(var_sp)
-      )
+      set.seed(1)
+      thin(loc.data = occ, lat.col = "y", long.col = "x", spec.col = "species", 
+           thin.par = x, reps = 5, locs.thinned.list.return = TRUE, 
+           write.files = FALSE, write.log.file = FALSE, verbose = FALSE)[[1]]
     }))
     
     
     #Rename list with distances
     names(filtered) <- d
     
-    # Calculate spatial autoccorelation (Moran I)
+    ## Calculate spatial autoccorelation (Moran I)
     imoran <- lapply(seq_along(filtered), function(x){
       tryCatch({ #Avoid errors
-      coord <- filtered[[x]] %>% dplyr::select(x, y)
-      data <- data.frame(terra::extract(var_sp, coord, ID = FALSE))
-      coord <- coord[!is.na(data[,1]),]
-      data <- data[!is.na(data[,1]),]
-      imoran_x <- apply(data, 2, function(x)
-        moranfast(x, coord$x, coord$y)$observed)
+        coord <- filtered[[x]] %>% dplyr::select(Longitude, Latitude)
+        data <- data.frame(terra::extract(var_sp, coord, ID = FALSE))
+        coord <- coord[!is.na(data$PC1),]
+        data <- data[!is.na(data$PC1),]
+        imoran_x <- apply(data, 2, function(x)
+          moranfast(x, coord$Longitude, coord$Latitude)$observed)
       },
       error=function(e) NULL) #Avoid errors
     })
     names(imoran) <- d
-    
-    #Convert list to dataframe
     imorandf <- do.call("rbind", imoran) %>% as.data.frame() %>% 
       mutate(Distance = d, .before = 1)
     
@@ -140,7 +140,9 @@ moran_df <- pblapply(seq_along(spp), function(i) {
       dplyr::sample_n(1) # Select a random value if more than one is selected
     
     #Get final points
-    final_points <- filtered[[finalfilter$Distance %>% as.character()]]
+    final_points <- cbind("species" = sp,
+      filtered[[finalfilter$Distance %>% as.character()]])
+    colnames(final_points)[2:3] <- c("x", "y")
     
     #Return final points
     return(final_points)
