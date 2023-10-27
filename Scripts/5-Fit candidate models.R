@@ -18,9 +18,6 @@ source("https://raw.githubusercontent.com/wevertonbio/pre_kuenm2/main/Functions/
 #Get species
 spp <- list.dirs("Data_example/Models/", recursive = F, full.names = F)
 
-
-
-
 #Get species directory
 sp_dir <- file.path("Data_example/Models", spp)
 
