@@ -1,0 +1,2 @@
+"Combination","species","N_records","Outside_M","N.polygons","kernel_spread","suitability_threshold","replicates","dispersal_events","access_threshold","simulation_period","stable_lgm","transition_to_lgm","lgm_to_current","stable_current","scenario_span","starting_proportion"
+6,"Araucaria angustifolia",410,3,1,6,5,10,25,5,50,7,100,7,13,1,0.5

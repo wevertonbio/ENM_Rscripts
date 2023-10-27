@@ -1,0 +1,13 @@
+Simulation parameters
+
+    Suitability scenarios:  50 
+    Dispersal events:  25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 
+    Replicates:  10 
+    Dispersal kernel:  normal 
+    Kernel spread (SD):  15 
+    Maximum number of dispersers:  5 
+
+Simulation time
+
+    Start date | time:  2023-10-26 21:16:50 CDT 
+    Running time:  3.957874 mins
