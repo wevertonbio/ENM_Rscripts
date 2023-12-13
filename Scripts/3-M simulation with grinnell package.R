@@ -163,8 +163,8 @@ for (z in 1:nrow(df_comb)) {
     crs(m_final) <- "+init=epsg:4326"
     
     #To check number of polygons, does not include islands and put buffer of 5 km
-    m_no_islands <- m_final[!is.related(m_final, neotropic_islands, relation = "contains")] %>% 
-              buffer(., width = 5*1000) %>% terra::aggregate() %>% disagg()
+    m_no_islands <- terra::erase(m_final, neotropic_islands) %>% 
+      buffer(., width = 5*1000) %>% terra::aggregate() %>% disagg()
 
     #Calculate number of polygons now
     n_pol <- length(m_no_islands)
