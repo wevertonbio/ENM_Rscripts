@@ -1,14 +1,14 @@
 #### M simulation with grinnell package####
 #See more in: https://github.com/fmachados/grinnell
 
-#LOad packages
+#Load packages
 library(grinnell)
 library(dplyr)
-library(raster)
-library(data.table)
-library(sf)
+#library(raster) #Not necessary anymore
+#library(data.table) #Not necessary anymore
+#library(sf) #Not necessary anymore
 library(terra)
-library(flexsdm)
+#library(flexsdm) #Not necessary anymore
 
 #Create directory to save M simulations
 dir.create("Data_example/M_simulations/Shapefiles", recursive = T)
@@ -92,16 +92,18 @@ dir.create(file.path(sp.path, "M_NOT_OK"))
 
 
 #Set initial M: a minimum convex polygon with a buffer of 1500km
-#We set this initial buffer to decrease the time of simulation
-ca <- flexsdm::calib_area(df.sp, x = "longitude", y = "latitude",
-                 method = c('bmcp', width=1500*1000),
-                 crs = "+init=epsg:4326") %>% st_as_sf()
+##We set this initial buffer to decrease the time of simulation
+#Convert points to spatvector
+occ_spt <- vect(df.sp, geom = c(x = "longitude", y = "latitude"),
+                crs = "+init=epsg:4326")
+#MCP and buffer
+ca <- terra::convHull(occ_spt) %>% buffer(width = 1500*1000)
 
 #Cut variables and transform in stack raster
-c.var <- crop(c.var, ca, mask = TRUE) %>% raster::stack() #Current
-lgm.var <- crop(lgm.var, ca) %>% raster::stack() #LGM
+c.var <- crop(c.var, ca, mask = TRUE) #Current
+lgm.var <- crop(lgm.var, ca) #LGM
 #Make sure they have the same extent
-extent(c.var) <- extent(lgm.var)
+ext(c.var) <- ext(lgm.var)
 
 
 #Simulate M
@@ -139,7 +141,8 @@ for (z in 1:nrow(df_comb)) {
                          out_format = "GTiff",
                          set_seed = 42,
                          write_all_scenarios = F,
-                         output_directory = sp.path)
+                         output_directory = sp.path,
+                         overwrite = T)
   )
   #Delete all results that cause errors
   all_files <- list.files(sp.path, recursive = F,
@@ -151,7 +154,7 @@ for (z in 1:nrow(df_comb)) {
   #Check if all points fall inside M
   if(class(m) == "list") {
     #Disaggregate M
-    new_m <- disagg(vect(m$A_polygon))
+    new_m <- disagg(m$A_polygon)
     new_m$binary <- 1:length(new_m$binary)
 
     #See where the occurrences falling

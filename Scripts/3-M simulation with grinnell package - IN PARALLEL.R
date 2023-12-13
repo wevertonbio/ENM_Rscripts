@@ -5,12 +5,12 @@
 #LOad packages
 library(grinnell)
 library(dplyr)
-library(raster)
-library(data.table)
-library(sf)
+#library(raster)
+#library(data.table)
+#library(sf)
 library(terra)
 # library(pbapply)
-library(flexsdm)
+#library(flexsdm)
 library(parallel)
 library(foreach)
 library(doSNOW)
@@ -138,16 +138,18 @@ foreach::foreach(x = 1:n, .options.snow = opts,
     
     
     #Set initial M: a minimum convex polygon with a buffer of 1500km
-    #We set this initial buffer to decrease the time of simulation
-    ca <- flexsdm::calib_area(df.sp, x = "longitude", y = "latitude",
- method = c('bmcp', width=1500*1000),
- crs = "+init=epsg:4326") %>% st_as_sf()
+    ##We set this initial buffer to decrease the time of simulation
+    #Convert points to spatvector
+    occ_spt <- vect(df.sp, geom = c(x = "longitude", y = "latitude"),
+                    crs = "+init=epsg:4326")
+    #MCP and buffer
+    ca <- terra::convHull(occ_spt) %>% buffer(width = 1500*1000)
     
-    #Cut variables and transform in stack raster
-    c.var <- crop(c.var, ca, mask = TRUE) %>% raster::stack() #Current
-    lgm.var <- crop(lgm.var, ca) %>% raster::stack() #LGM
+    #Cut variables 
+    c.var <- crop(c.var, ca, mask = TRUE)  #Current
+    lgm.var <- crop(lgm.var, ca)
     #Make sure they have the same extent
-    extent(c.var) <- extent(lgm.var)
+    ext(c.var) <- ext(lgm.var)
     
     
     #Simulate M
@@ -185,7 +187,8 @@ foreach::foreach(x = 1:n, .options.snow = opts,
                               out_format = "GTiff",
                               set_seed = 42,
                               write_all_scenarios = F,
-                              output_directory = sp.path),
+                              output_directory = sp.path,
+                              overwrite = T),
                                              silent = TRUE)
       #Delete all results that cause errors
       all_files <- list.files(sp.path, recursive = F,
@@ -197,7 +200,7 @@ foreach::foreach(x = 1:n, .options.snow = opts,
       #Check if all points fall inside M
       if(class(m) == "list") {
         #Disaggregate M
-        new_m <- disagg(vect(m$A_polygon))
+        new_m <- disagg(m$A_polygon)
         new_m$binary <- 1:length(new_m$binary)
         
         #See where the occurrences falling
